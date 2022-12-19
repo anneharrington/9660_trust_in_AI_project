@@ -1,0 +1,76 @@
+
+//generating function
+var generateSeqStandard = function(sequenceSoFar,trustSoFar, n_total) {
+  var adv = flip(0.5)
+  var stims = sequenceSoFar.concat(adv)
+  var trust_curr = (adv) ? flip(0.1): flip(0.75)
+  var trust_seq = trustSoFar.concat(trust_curr)
+  if (stims.length < n_total){
+    return generateSeqStandard(stims,trust_seq,n_total)
+  }
+  else {
+    return {stims:stims, trust_seq:trust_seq}
+  }
+}
+
+var generateSeqAdv = function(sequenceSoFar,trustSoFar,n_total) {
+  var adv = flip(0.5)
+  var stims = sequenceSoFar.concat(adv)
+  var trust_curr = (adv) ? flip(0.55): flip(0.65)
+  var trust_seq = trustSoFar.concat(trust_curr)
+  if (stims.length < n_total){
+    return generateSeqAdv(stims,trust_seq,n_total)
+  }
+  else {
+    return {stims:stims, trust_seq:trust_seq}
+  }
+}
+
+editor.put("generateSeqStandard", generateSeqStandard)
+editor.put("generateSeqAdv", generateSeqAdv)
+var sequence = generateSeqStandard([],[],10) // [] is an empty list
+print("Sequence: " + sequence.stims)
+print("Outcome: " + sum(sequence.trust_seq))
+
+var sequenceAdv = generateSeqAdv([],[],10) // [] is an empty list
+print("Sequence: " + sequenceAdv.stims)
+print("Outcome: " + sum(sequenceAdv.trust_seq))
+
+
+//standard model
+
+var observations = 10
+var generateFrom = editor.get("generateSeqStandard")
+var model = function() {
+  var sequence = generateFrom([],[],observations)
+  var trust_score = sum(sequence.trust_seq)
+  return trust_score
+//   condition(sum(sequence.trust_seq)/observations >=0.5)
+// //   condition(_.isEqual(observations,sequence))
+//   return sequence.stims
+}
+
+var dist = Infer({method:"enumerate"}, model)
+// print(dist)
+viz(dist,{xLabel: 'Trust Score',title:'Standard Model Trust Score'})
+
+//robust
+
+var observations = 10
+var generateFrom = editor.get("generateSeqAdv")
+var model = function() {
+  var sequence = generateFrom([],[],observations)
+  var trust_score = sum(sequence.trust_seq)
+  return trust_score
+//   condition(sum(sequence.trust_seq)/observations >=0.5)
+// //   condition(_.isEqual(observations,sequence))
+//   return sequence.stims
+}
+
+var dist = Infer({method:"enumerate"}, model)
+// print(dist)
+viz(dist,{xLabel: 'Trust Score'})
+
+
+
+
